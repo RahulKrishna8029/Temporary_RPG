@@ -12,7 +12,74 @@ import os
 # using an access token
 g = Github("")
 
+def kg_pullReq(repo,file_name):
+    print("constructing pull request KG")
+    #pull request data from repository
+    pull_requests = repo.get_pulls(state='open', sort='created', base='master')
 
+    request_list = []
+
+    for pull  in pull_requests:
+        request_list.append(pull)
+
+    print("No.of Pull requests",len(request_list))
+    request_list.reverse()
+    index = 0
+    while index < len(request_list):
+        request_number = request_list[index]
+        index = index + 1
+        print("Processing Pull Request : ",index)
+        #Here we focus on file that are changed
+        additions = ""
+        deletions = ""
+
+        for _file in request_number.files:
+            if _file.filename != file_name:
+                continue
+            patch = _file.patch
+            
+            if patch is None:
+                patch=""
+            patch_lines = patch.split("\n")
+            
+                # f.seek(0)
+                # f.truncate()
+            for line in patch_lines:
+                if len(line) == 0 or len(line)==1:
+                    continue
+                if line[0] == "+" :
+                    additions += (line[1:]+"\n")              
+                    
+                elif line[0]== "-":
+                    deletions += (line[1:]+"\n")              
+                    
+            
+        
+        with open('./data/input/input_data.txt','w+') as f:
+            f.write(additions)
+        f.close()
+        if len(additions) == 0:
+            continue
+
+     
+        construct_kg(additions)
+        Stanford_Relation_Extractor()
+        create_csv(request_number.commit.committer.date, request_number.sha, "", "addition")
+
+        if len(deletions) == 0:
+            continue
+      
+
+        with open('./data/input/input_data.txt','w+') as f:
+            f.write(deletions)
+        f.close()
+        construct_kg(deletions)
+        Stanford_Relation_Extractor()
+        create_csv(request_number.commit.committer.date, request_number.sha, "", "deletion")
+       # kg_commits(repo=repo,file_name=file_name)
+       #for comments and status changes we'll be looking for it again
+    print("Pull Request KG completed")
+"""
 def kg_commits(repo,file_name):
     print("Constructing commits KG")
     commits = repo.get_commits(path=file_name)
@@ -76,7 +143,7 @@ def kg_commits(repo,file_name):
         create_csv(commit.commit.committer.date, commit.sha, "", "deletion")
     print("Commits KG completed")
                   
-
+"""
 def kg_readme(repo,file_name):
     print("Constructing KG on readme...")
     readme = repo.get_contents(file_name)
@@ -115,7 +182,7 @@ if __name__ == "__main__":
     
     
     clean_commits_csv('./data/result/named_entity_input_data_.csv','./results/commits_'+repo.name+'.csv')
-    kg_commits(repo,file_name)
+    kg_pullReq(repo,file_name)
     convert_to_json('./results/commits_'+repo.name+'.csv','./results/commits_'+repo.name+'.json')
     kg_readme(repo,file_name)
     clean_readme_csv('./data/result/named_entity_input_data_readme.csv','./results/readme_'+repo.name+'.csv')
