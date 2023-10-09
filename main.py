@@ -30,6 +30,8 @@ def kg_pullReq(repo,file_name):
         index = index + 1
         print("Processing Pull Request : ",index)
         #Here we focus on file that are changed
+        print("Staus of Request :", request_number.state)
+        print("Branch :",request_number.base)
         additions = ""
         deletions = ""
 
