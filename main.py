@@ -86,7 +86,7 @@ def kg_pullReq(repo,file_name):
 def kg_pullReq(repo,file_name):
     print("constructing pull request KG")
     #pull request data from repository
-    pull_requests = repo.get_pulls(state='close', sort='created', base='master')
+    pull_requests = repo.get_pulls(state='closed', sort='created', base='master')
 
     request_list = []
 
