@@ -81,6 +81,77 @@ def kg_pullReq(repo,file_name):
        # kg_commits(repo=repo,file_name=file_name)
        #for comments and status changes we'll be looking for it again
     print("Pull Request KG completed")
+
+#pull requests that are closed
+def kg_pullReq(repo,file_name):
+    print("constructing pull request KG")
+    #pull request data from repository
+    pull_requests = repo.get_pulls(state='close', sort='created', base='master')
+
+    request_list = []
+
+    for pull  in pull_requests:
+        request_list.append(pull)
+
+    print("No.of Pull requests",len(request_list))
+    request_list.reverse()
+    index = 0
+    while index < len(request_list):
+        request_number = request_list[index]
+        index = index + 1
+        print("Processing Pull Request : ",index)
+        #Here we focus on file that are changed
+        print("Staus of Request :", request_number.state)
+        print("Branch :",request_number.base)
+        additions = ""
+        deletions = ""
+
+        for _file in request_number.files:
+            if _file.filename != file_name:
+                continue
+            patch = _file.patch
+            
+            if patch is None:
+                patch=""
+            patch_lines = patch.split("\n")
+            
+                # f.seek(0)
+                # f.truncate()
+            for line in patch_lines:
+                if len(line) == 0 or len(line)==1:
+                    continue
+                if line[0] == "+" :
+                    additions += (line[1:]+"\n")              
+                    
+                elif line[0]== "-":
+                    deletions += (line[1:]+"\n")              
+                    
+            
+        
+        with open('./data/input/input_data.txt','w+') as f:
+            f.write(additions)
+        f.close()
+        if len(additions) == 0:
+            continue
+
+     
+        construct_kg(additions)
+        Stanford_Relation_Extractor()
+        create_csv(request_number.commit.committer.date, request_number.sha, "", "addition")
+
+        if len(deletions) == 0:
+            continue
+      
+
+        with open('./data/input/input_data.txt','w+') as f:
+            f.write(deletions)
+        f.close()
+        construct_kg(deletions)
+        Stanford_Relation_Extractor()
+        create_csv(request_number.commit.committer.date, request_number.sha, "", "deletion")
+       # kg_commits(repo=repo,file_name=file_name)
+       #for comments and status changes we'll be looking for it again
+    print("Pull Request KG completed")
 """
 def kg_commits(repo,file_name):
     print("Constructing commits KG")
