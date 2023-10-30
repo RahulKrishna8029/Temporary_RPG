@@ -103,6 +103,7 @@ def kg_pullReq(repo,file_name):
         #Here we focus on file that are changed
         print("Staus of Request :", request_number.state)
         print("Branch :",request_number.base)
+        print("No.of Commits :",request_number.pull_number.commit)
         additions = ""
         deletions = ""
 
