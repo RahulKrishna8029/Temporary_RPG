@@ -10,7 +10,7 @@ from csv_utils import convert_to_json, clean_commits_csv, clean_readme_csv
 import os
 
 # using an access token
-g = Github("")
+g = Github("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")
 
 def kg_pullReq(repo,file_name):
     print("constructing pull request KG")
