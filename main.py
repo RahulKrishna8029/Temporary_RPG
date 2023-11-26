@@ -11,7 +11,64 @@ import os
 
 # using an access token
 g = Github("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")
+from github import Github
+#Updated code for the pull request
+def process_pull_request(repo, pull_request, file_name):
+    print(f"Processing Pull Request #{pull_request.number}")
+    
+    # Extract pull request details
+    pull_request_details = {
+        'number': pull_request.number,
+        'title': pull_request.title,
+        'description': pull_request.body,
+        'author': pull_request.user.login,
+        'date_closed': pull_request.closed_at,
+        'status': pull_request.state,
+        'branch': pull_request.base.ref,
+        'commits_count': pull_request.commits,
+    }
+    
+    # Retrieve files changed in the pull request
+    files_changed = pull_request.get_files()
+    
+    additions = ""
+    deletions = ""
+    
+    for _file in files_changed:
+        if _file.filename != file_name:
+            continue
+        patch = _file.patch
+        
+        if patch is None:
+            patch = ""
+        patch_lines = patch.split("\n")
+        
+        for line in patch_lines:
+            if len(line) > 1:
+                if line[0] == "+":
+                    additions += line[1:] + "\n"
+                elif line[0] == "-":
+                    deletions += line[1:] + "\n"
 
+    # Write additions to file and construct knowledge graph
+    write_and_process_changes(additions, "addition", pull_request_details)
+    
+    # Write deletions to file and construct knowledge graph
+    write_and_process_changes(deletions, "deletion", pull_request_details)
+
+def kg_pull_requests(repo, file_name):
+    print("Constructing pull request KG")
+    # Pull request data from the repository
+    pull_requests = repo.get_pulls(state='closed', sort='created', base='main')
+
+    for pull_request in reversed(list(pull_requests)):
+        process_pull_request(repo, pull_request, file_name)
+
+    print("Pull Request KG completed")
+    
+#kg_pull_requests(repo, "your_file_name.txt")
+
+"""
 def kg_pullReq(repo,file_name):
     print("constructing pull request KG")
     #pull request data from repository
@@ -154,7 +211,7 @@ def kg_pullReq(repo,file_name):
        # kg_commits(repo=repo,file_name=file_name)
        #for comments and status changes we'll be looking for it again
     print("Pull Request KG completed")
-"""
+
 def kg_commits(repo,file_name):
     print("Constructing commits KG")
     commits = repo.get_commits(path=file_name)
@@ -217,8 +274,8 @@ def kg_commits(repo,file_name):
         Stanford_Relation_Extractor()
         create_csv(commit.commit.committer.date, commit.sha, "", "deletion")
     print("Commits KG completed")
-                  
-"""
+   """               
+
 def kg_readme(repo,file_name):
     print("Constructing KG on readme...")
     readme = repo.get_contents(file_name)
